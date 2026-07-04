@@ -1,1 +1,19 @@
-
+workflows:
+  react-native-android:
+    name: React Native Android
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      node: 20.x
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Run Expo Prebuild
+        script: |
+          npx expo prebuild --platform android
+      - name: Build Android debug APK
+        script: |
+          cd android && ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
