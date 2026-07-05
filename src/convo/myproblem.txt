@@ -1,0 +1,18 @@
+cccMy Expo React Native app crashes on Android with this error:
+
+java.lang.ClassNotFoundException: Didn't find class "expo.modules.kotlin.types.AnyTypeCache"
+
+This is an Expo SDK 54 project built with pnpm. The app builds successfully via Codemagic (Gradle assembleDebug completes with no errors), installs fine on the device, but crashes immediately on launch with the above error in AndroidRuntime/logcat.
+
+I already tried:
+1. Fixing expo-camera and expo-speech versions to match SDK 54 (~17.0.7 and ~14.0.7) — crash persisted
+2. Regenerating pnpm-lock.yaml after that fix — crash persisted
+3. Adding shamefully-hoist=true to .npmrc and adding @expo/config-plugins as a direct dependency to fix an unrelated config-plugin resolution error — this fixed a different build error but not this crash
+
+Can you:
+1. Run `npx expo install --check` in this workspace and tell me exactly which packages are mismatched against SDK 54
+2. Check if there are duplicate/conflicting versions of expo-modules-core in node_modules (possible due to pnpm hoisting)
+3. Check my custom native Kotlin module in plugins/withAstralConvoNative/ for anything that might reference an outdated expo-modules-core API
+4. Give me the exact commands to fix whatever is actually mismatched, and explain what was wrong before I commit and push
+
+My package.json and pnpm-lock.yaml are open in this workspace — please read them directly.c
