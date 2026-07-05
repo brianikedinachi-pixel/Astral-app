@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
+import * as SplashScreen from "expo-splash-screen";
 import { Platform, View, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
 import {
@@ -54,11 +55,37 @@ export default function RootLayout() {
     DMSans_400Regular_Italic,
     DMSans_500Medium,
   });
+  const [appIsReady, setAppIsReady] = useState(false);
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
     initManusRuntime();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+
+    SplashScreen.preventAutoHideAsync().catch(() => {
+      // ignore if splash screen is already hidden or can't be prevented
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const hideSplash = async () => {
+      if (Platform.OS !== "web") {
+        try {
+          await SplashScreen.hideAsync();
+        } catch {
+          // ignore hide failures
+        }
+      }
+      setAppIsReady(true);
+    };
+
+    void hideSplash();
+  }, [fontsLoaded]);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
     setInsets(metrics.insets);
@@ -121,12 +148,8 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, backgroundColor: "#06080f", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color="#00eaff" size="large" />
-      </View>
-    );
+  if (!appIsReady) {
+    return null;
   }
 
   const shouldOverrideSafeArea = Platform.OS === "web";
