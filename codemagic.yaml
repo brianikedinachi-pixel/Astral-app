@@ -5,9 +5,10 @@ workflows:
     environment:
       node: 20
     scripts:
-      - name: Install npm dependencies
+      - name: Install dependencies
         script: |
-          npm install
+          npm install -g pnpm
+          pnpm install 
       - name: Run Expo Prebuild
         script: |
           npx expo prebuild --platform android
