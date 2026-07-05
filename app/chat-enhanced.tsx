@@ -766,7 +766,9 @@ export default function ChatEnhancedScreen() {
     }
     stopSpeaking();
     setSpeakingIdx(idx);
-    speak(text, () => setSpeakingIdx((cur) => (cur === idx ? null : cur)));
+    speak(text, {
+      onDone: () => setSpeakingIdx((cur) => (cur === idx ? null : cur)),
+    });
   };
 
   /* ── Send ───────────────────────────────────────────────────────── */
@@ -863,7 +865,9 @@ export default function ChatEnhancedScreen() {
 
       if (voiceEnabled) {
         setSpeakingIdx(targetIdx);
-        speak(reply, () => setSpeakingIdx((cur) => (cur === targetIdx ? null : cur)));
+        speak(reply, {
+          onDone: () => setSpeakingIdx((cur) => (cur === targetIdx ? null : cur)),
+        });
       }
 
       // Auto-open the preview for text-based formats, same as web
