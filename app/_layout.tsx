@@ -29,9 +29,15 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+import * as SplashScreen from "expo-splash-screen";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
+
+// Keep splash screen visible while we initialize
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* reloading the app might trigger errors, but we want to ignore them */
+});
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -43,6 +49,7 @@ export default function RootLayout() {
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
+  const [appReady, setAppReady] = useState(false);
 
   // Astral's display font (Syne) + body font (DM Sans) — same pairing as
   // the web frontend's @import in styles/index.css.
@@ -106,6 +113,16 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
+  // Hide splash screen once fonts are loaded and app is ready
+  useEffect(() => {
+    if (fontsLoaded) {
+      setAppReady(true);
+      SplashScreen.hideAsync().catch(() => {
+        /* If it fails, the app will still work */
+      });
+    }
+  }, [fontsLoaded]);
+
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -113,12 +130,12 @@ export default function RootLayout() {
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="signin" />
+          <Stack screenOptions={{ headerShown: false, animationEnabled: true }}>
+            <Stack.Screen name="signin" options={{ animationEnabled: false }} />
             <Stack.Screen name="chat" />
             <Stack.Screen name="convo" options={{ presentation: "fullScreenModal", headerShown: false }} />
             <Stack.Screen name="settings" />
-            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(tabs)" options={{ animationEnabled: false }} />
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <StatusBar style="auto" />
@@ -127,7 +144,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 
-  if (!fontsLoaded && !fontError) {
+  if (!appReady) {
     return (
       <View style={{ flex: 1, backgroundColor: "#06080f", alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color="#00eaff" size="large" />
